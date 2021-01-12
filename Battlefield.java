@@ -1,7 +1,9 @@
 import java.awt.*;
 import java.awt.image.*;
 import java.awt.event.*;
-import java.util.*; 
+import java.util.*;
+
+
 import java.io.*;
 import java.applet.*;
 
@@ -56,7 +58,7 @@ public class Battlefield  extends Frame{
    	ArrayList<Explode> explodeList;
 	   ArrayList<Accessory> accessoryList;
 	   ArrayList<Missile> missileList;
-    TextField t1,t2,t3,t4 ;
+    TextField t1,t2,t3,t4 ;     //文本框分别是子弹余量、生命值、油量
     Panel p1,p2;
     Button start,save,load;
     Timer timer,timer2,timer3;
@@ -64,10 +66,10 @@ public class Battlefield  extends Frame{
     Displayer d2;
     Backgroudmusic m1;
     Scenemusic m2;
-   	int delay=10000;
+   	int delay=10000;   //每隔10秒补充给养
    	float backy=638;
-	   boolean fire=false;
-	   boolean missile = false;
+	boolean fire=false;
+	boolean missile = false;
    	boolean goon=true;
    	int gameover=0;
 	boolean hasAccessory=false;
@@ -101,47 +103,50 @@ public class Battlefield  extends Frame{
        	planeList = new ArrayList<Airplane>(); 
        	bulletsList = new ArrayList<Bullet>(); 
        	explodeList = new ArrayList<Explode>(); 
-		   accessoryList = new ArrayList<Accessory>(); 
-		   missileList = new ArrayList<Missile>();
+		accessoryList = new ArrayList<Accessory>(); 
+		missileList = new ArrayList<Missile>();
     }
 	public void gameperpare(){
         Controlplane=new Airplane(500,750,80,66);
         Controlplane.speed=10;
         p2.addKeyListener(new MyKeyListener());
-        m2=new Scenemusic();
+        m2=new Scenemusic();   //m2是音乐效果
 	}
+	
+	//开新的一局游戏
 	public void gamebegin(){
 		TimerTask task=new TimerTask(){
 			 public void run(){
-				 hasAccessory=true; 
+				 hasAccessory=true;       //task用来定期补充给养
 			     m2.beepclip.loop();
 			 }	
 			};
 		timer = new Timer();
 		timer.schedule(task,0,delay);
 
-	     TimerTask task2=new TimerTask(){
+	     TimerTask task2=new TimerTask(){       //task2是用来定时减少战斗机的油量的
 			 public void run(){
-						 Controlplane.oil-=5 ; 
-				         t3.setText(Controlplane.oil+""); 	 
+						 Controlplane.oil-=5 ;    //定时，油量减5       
+				         t3.setText(Controlplane.oil+""); 	 //t3文本框是用来显示油量的
 					 }	
 					};
 		timer2 = new Timer();
-		timer2.schedule(task2,3000,3000);
+		timer2.schedule(task2,3000,3000);  //间隔是3秒
 
 	    TimerTask task3=new TimerTask(){
 			 public void run(){
-                 addplane=true;
+                 addplane=true;          //task3是用来定时补充敌机的
                        }	
 			};
 		timer3 = new Timer();
-		timer3.schedule(task3,2000,40000);
+		timer3.schedule(task3,2000,20000);    //间隔为40秒，我改成20
 		
-		Controlplane.pX=500;
-		Controlplane.pY=750;
-		Controlplane.life=100;
-		Controlplane.bulletnum=100;
-		Controlplane.oil=100;
+		//设定我方战斗机的初始值
+		Controlplane.pX=500;        
+		Controlplane.pY=500;   			//学长给的是750，但是太低了在我的电脑上看不见;
+		Controlplane.life=200;			//初始生命值改成200
+		Controlplane.bulletnum=100;     //子弹数量
+		Controlplane.oil=100;   		//初始油量
 
 
         g=(Graphics2D)this.p2.getGraphics(); 
@@ -166,17 +171,18 @@ public class Battlefield  extends Frame{
     	//d1.start();
         d2.start();
 	}
+	
 	public void gameContrl(Graphics2D drawOffScreen){
  
-    	 drawOffScreen.fillRect(0, 0, 1000, 900);
+    	 drawOffScreen.fillRect(0, 0, 1000, 800);
 		  drawOffScreen.drawImage(backgroud,0,0,1000,900,0,(int)backy,360,320+(int)backy,null);
 		  backy-=.2;
-		//  System.out.println((int)backy+"");
+		
 		  if (backy<0) backy=638; 
 
 		   drawOffScreen.drawImage(backgroud,0,0,1000,900,null);  
-    	   if (addplane){
-		    if (planeList.size()<8) planeList.add(new Airplane());
+    	   if (addplane){      //每隔一段时间会置为true
+		    if (planeList.size()<8) planeList.add(new Airplane());    //如果敌机数量小于8，则补充敌机
 		    addplane=false;
            }
     	  Iterator<Airplane> pnums = planeList.iterator();
@@ -280,12 +286,13 @@ public class Battlefield  extends Frame{
   	 		    	  m2.explodeclip.play();
      		          };  		 
      	        } 
-    	   if (fire){
+    	   if (fire){		 //发射子弹
     	   	bulletsList.add(new Bullet(Controlplane.pX+Controlplane.pWidth/2-3,Controlplane.pY,13,13));
     	   	fire=false;
+   
     	   	t1.setText(Controlplane.bulletnum+"");  
 		   }
-		   if(missile){
+		   if(missile){   //发射导弹
 			   Missile mis = new Missile(Controlplane.pX+Controlplane.pWidth/2-3,Controlplane.pY,13,13,planeList);
 			   missileList.add(mis);
 			   missile = false;
@@ -318,7 +325,7 @@ public class Battlefield  extends Frame{
     	    if (gameover==-1) drawOffScreen.drawImage(gameoverimage,Controlplane.pX,Controlplane.pY,null);  
     	    if (gameover==1) drawOffScreen.drawImage(winimage,Controlplane.pX,Controlplane.pY,null);  
 
- 		      if ((Controlplane.life<0) || (Controlplane.oil<0)) {
+ 		      if ((Controlplane.life<0) || (Controlplane.oil<0)) {     //战斗机失败条件
 		    	  explodeList.add(new Explode(Controlplane.pX,Controlplane.pY));
 		    	  gameover=-1;
 		    	  Controlplane.life=0;
@@ -349,7 +356,7 @@ public class Battlefield  extends Frame{
 	 	   public void keyPressed(KeyEvent e)
 	 	   {
 	 		   key = e.getKeyCode();
-	 		   if(key == KeyEvent.VK_RIGHT)
+	 		   if(key == KeyEvent.VK_RIGHT)    //获取键盘操作
 	 	      {
 	 			  Controlplane.pX+= Controlplane.speed;
 	 	      }
@@ -365,14 +372,16 @@ public class Battlefield  extends Frame{
 	 	      {
 	 			  Controlplane.pY+= Controlplane.speed;
 	 	      }
-	 	      else if(key == KeyEvent.VK_BACK_SPACE)
+	 		   
+	 		   //以下做了修改，改成：按空格键表示发射子弹，按回车键表示发射导弹
+	 	      else if(key == KeyEvent.VK_SPACE)     //KeyEvent.VK_BACK_SPACE
 	 	      {
-	 	    	if  (Controlplane.bulletnum-->=0)
+	 	    	if  (Controlplane.bulletnum-->=0)  
 	 	    	  fire=true;
  		    	  m2.gunshotclip.play();
 			   }
-			   else if(key == KeyEvent.VK_SPACE){
-					missile = true;
+			   else if(key == KeyEvent.VK_BACK_SPACE){
+					missile = true;   
 			   }
 			   
 			  
@@ -383,7 +392,7 @@ public class Battlefield  extends Frame{
 
   public void showcomponent(){
 	   MenuBar m_MenuBar = new MenuBar(); 
-	   Menu menuFile = new Menu("menuFile");     
+	   Menu menuFile = new Menu("Plane_Wars_Homework");     
 	   m_MenuBar.add(menuFile);                 
 	   MenuItem  f1 =  new MenuItem("f1");   
 	   MenuItem  f2 = new MenuItem("f2");
@@ -393,24 +402,32 @@ public class Battlefield  extends Frame{
      //
     	p1 = new Panel();
 	    add(p1,"North");
-	    p1.setLayout(new GridLayout(1,10)); 
+	    p1.setLayout(new GridLayout(1,10));   //使用网格布局
 	    
-   	    p1.add(new Label("0"),0);
-	    t1 = new TextField(3);
+	    Label label1 = new Label("Bullet_num");
+	    label1.setAlignment(java.awt.Label.CENTER);   //让标签文字居中
+   	    p1.add(label1,0);   
+	    t1 = new TextField(2);
 	    p1.add(t1,1);
-   	    p1.add(new Label("2"),2);
-	    t2 = new TextField(3);
+	    
+	    Label label2 = new Label("Life");
+	    label2.setAlignment(java.awt.Label.CENTER);
+   	    p1.add(label2,2);    
+	    t2 = new TextField(2);  //在awt中，baiTextField没有设置对齐方式的方法。除非改用JTextField
 	    p1.add(t2,3);
-   	    p1.add(new Label("4"),4);
-	    t3 = new TextField(3);
+	    
+	    Label label3 = new Label("Oil");
+	    label3.setAlignment(java.awt.Label.CENTER);
+   	    p1.add(label3,4);
+	    t3 = new TextField(2);
 	    p1.add(t3,5);
-        start=new Button("start");	
+        start=new Button("Start");	
         p1.add(start,6);
 	    start.addActionListener(new Startaction());
-        save=new Button("save");	
+        save=new Button("Save");	
         p1.add(save,7);
         save.addActionListener(new Saveaction());
-        load=new Button("load");	
+        load=new Button("Load");	
         p1.add(load,8);
         load.addActionListener(new Loadaction());
         	    
